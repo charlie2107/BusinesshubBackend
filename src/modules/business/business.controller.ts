@@ -1,5 +1,5 @@
 // src/modules/business/business.controller.ts
-import { Controller, Get, Post, Body, Param, Patch, Delete, UploadedFiles, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, Delete, UploadedFiles, UseInterceptors, Query } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { CreateBusinessDto } from './dto/create-business.dto';
 import { UpdateBusinessDto } from './dto/update-business.dto';
@@ -44,6 +44,22 @@ export class BusinessController {
     return this.businessService.findAll(); // photos are already URLs
   }
 
+  // ---------------- SEARCH BUSINESSES ----------------
+@Get('search')
+async search(@Query('q') query: string) {
+  if (!query || typeof query !== 'string' || query.trim() === '') {
+    return [];
+  }
+  return this.businessService.searchBusinesses(query.trim());
+}
+
+
+  // ---------------- BUSINESSES BY CATEGORY ----------------
+  @Get('category/:id')
+  getByCategoryId(@Param('id') id: string) {
+    return this.businessService.getByCategoryId(id);
+  }
+
   // ---------------- GET SINGLE BUSINESS ----------------
   @Get(':id')
   async findOne(@Param('id') id: string) {
@@ -61,10 +77,4 @@ export class BusinessController {
   remove(@Param('id') id: string) {
     return this.businessService.remove(id);
   }
-
-  @Get('category/:id')
-  getByCategoryId(@Param('id') id: string) {
-    return this.businessService.getByCategoryId(id);
-  }
-
 }

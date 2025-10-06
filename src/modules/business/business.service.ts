@@ -95,19 +95,70 @@ async create(createBusinessDto: CreateBusinessDto): Promise<Business> {
     if (!result) throw new NotFoundException('Business not found');
   }
 
+// Fetch category and its businesses
 async getByCategoryId(categoryId: string) {
-    if (!Types.ObjectId.isValid(categoryId)) {
-      throw new NotFoundException('Invalid category ID');
-    }
-
-    const category = await this.categoryModel.findById(categoryId).lean().exec();
-    if (!category) throw new NotFoundException('Category not found');
-
-    const businesses = await this.businessModel.find({ category: categoryId }).lean();
-    return {
-      category,
-      businesses,
-      count: businesses.length,
-    };
+  if (!Types.ObjectId.isValid(categoryId)) {
+    throw new NotFoundException('Invalid category ID');
   }
+
+  const category = await this.categoryModel.findById(categoryId).lean().exec();
+  if (!category) throw new NotFoundException('Category not found');
+
+const objectId = new Types.ObjectId(categoryId);
+const businesses = await this.businessModel
+  .find({ category: objectId })
+  .populate('category', 'name slug icon')
+  .lean()
+  .exec();
+  return {
+    category,      // category object
+    businesses,    // businesses with populated category field
+    count: businesses.length,
+  };
+}
+
+async searchBusinesses(query: string): Promise<Business[]> {
+  const regex = new RegExp(query, 'i');
+  return this.businessModel.aggregate([
+    {
+      $lookup: {
+        from: 'categories',
+        localField: 'category',
+        foreignField: '_id',
+        as: 'categoryDetails',
+      },
+    },
+    { $unwind: '$categoryDetails' },
+    {
+      $match: {
+        $or: [
+          { name: { $regex: regex } },
+          { description: { $regex: regex } },
+          { address: { $regex: regex } },
+          { email: { $regex: regex } },
+          { phone: { $regex: regex } },
+          { 'categoryDetails.name': { $regex: regex } },
+          { 'categoryDetails.slug': { $regex: regex } },
+        ],
+      },
+    },
+    {
+      $project: {
+        name: 1,
+        description: 1,
+        address: 1,
+        email: 1,
+        phone: 1,
+        website: 1,
+        photos: 1,
+        category: '$categoryDetails',
+        createdAt: 1,
+        updatedAt: 1,
+      },
+    },
+  ]).exec();
+}
+
+
+
 }
