@@ -12,6 +12,6 @@ async function bootstrap() {
     credentials: true,     // If you need cookies/auth
   });
 
-  await app.listen(3001);
+  await app.listen(3000);
 }
 bootstrap();
