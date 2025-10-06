@@ -1,10 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Business, BusinessDocument } from './schemas/business.schema';
 import { CreateBusinessDto } from './dto/create-business.dto';
 import { UpdateBusinessDto } from './dto/update-business.dto';
 import { Category, CategoryDocument } from '../categories/schemas/category.schema';
+import { AddReviewDto } from './dto/add-review.dto';
 
 @Injectable()
 export class BusinessService {
@@ -159,6 +160,40 @@ async searchBusinesses(query: string): Promise<Business[]> {
   ]).exec();
 }
 
+async addReview(businessId: string, addReviewDto: AddReviewDto) {
+  const business = await this.businessModel.findById(businessId);
+  if (!business) throw new NotFoundException('Business not found');
+
+  // Check if user already reviewed
+  const existingReview = business.reviews.find(
+    (r) => r.user.toString() === addReviewDto.userId,
+  );
+  if (existingReview) {
+    throw new BadRequestException('User has already reviewed this business');
+  }
+
+  // Add new review with createdAt
+  business.reviews.push({
+    user: new Types.ObjectId(addReviewDto.userId),
+    rating: addReviewDto.rating,
+    comment: addReviewDto.comment,
+    createdAt: new Date(),  // ✅ Add this
+  });
+
+  await business.save();
+  return business;
+}
+
+  async getReviews(businessId: string) {
+    const business = await this.businessModel
+      .findById(businessId)
+      .populate('reviews.user', 'name email') // optional: populate user info
+      .exec();
+
+    if (!business) throw new NotFoundException('Business not found');
+
+    return business.reviews;
+  }
 
 
 }

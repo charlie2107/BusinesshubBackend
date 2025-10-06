@@ -30,6 +30,21 @@ export class Business {
 
   @Prop([String])
   photos?: string[]; // store photo URLs or file paths
+
+   @Prop([
+    {
+      user: { type: Types.ObjectId, ref: 'User', required: true },
+      rating: { type: Number, required: true },
+      comment: { type: String, required: true },
+      createdAt: { type: Date, default: Date.now },
+    },
+  ])
+  reviews: {
+    user: Types.ObjectId;
+    rating: number;
+    comment: string;
+    createdAt: Date;
+  }[];
 }
 
 export const BusinessSchema = SchemaFactory.createForClass(Business);

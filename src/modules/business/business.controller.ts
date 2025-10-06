@@ -6,6 +6,7 @@ import { UpdateBusinessDto } from './dto/update-business.dto';
 import { BusinessService } from './business.service';
 import { v2 as cloudinary } from 'cloudinary';
 import * as streamifier from 'streamifier';
+import { AddReviewDto } from './dto/add-review.dto';
 
 @Controller('business')
 export class BusinessController {
@@ -76,5 +77,19 @@ async search(@Query('q') query: string) {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.businessService.remove(id);
+  }
+
+
+  @Post(':id/review')
+  async addReview(
+    @Param('id') businessId: string,
+    @Body() addReviewDto: AddReviewDto,
+  ) {
+    return this.businessService.addReview(businessId, addReviewDto);
+  }
+
+  @Get(':id/reviews')
+  async getReviews(@Param('id') businessId: string) {
+    return this.businessService.getReviews(businessId);
   }
 }

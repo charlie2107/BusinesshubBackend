@@ -66,7 +66,7 @@ export class AuthService {
     });
 
     // Send email with reset link
-    const resetLink = `http://localhost:8080/reset-password?token=${resetToken}&email=${email}`;
+    const resetLink = `https://businessdial.vercel.app/reset-password?token=${resetToken}&email=${email}`;
 
     const transporter = nodemailer.createTransport({
       host: this.configService.get<string>('SMTP_HOST'),
